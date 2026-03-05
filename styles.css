@@ -1,0 +1,79 @@
+body{
+    font-family: 'Segoe UI', sans-serif;
+    margin:0;
+    padding:20px;
+    text-align:center;
+    background: #FFC0CB; 
+}
+
+
+h1{
+    color:white;
+    font-size:3rem;
+    margin-bottom:20px;
+}
+
+
+.filters{
+    display:flex;
+    justify-content:center;
+    gap:15px;
+    margin-bottom:30px;
+    flex-wrap:wrap;
+}
+
+.filters input{
+    padding:10px 15px;
+    border-radius:8px;
+    border:none;
+    font-size:14px;
+    outline:none;
+    box-shadow:0 3px 8px rgba(0,0,0,0.15);
+}
+
+.container{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:20px;
+}
+
+/* tarjeta */
+
+.card{
+    background:white;
+    width:240px;
+    padding:18px;
+    border-radius:16px;
+    box-shadow:0 8px 20px rgba(0,0,0,0.15);
+    transition:0.25s;
+    text-align:left;
+}
+
+.card:hover{
+    transform:translateY(-6px);
+    box-shadow:0 12px 25px rgba(0,0,0,0.25);
+}
+
+/* nombre */
+
+.card h3{
+    text-transform:capitalize;
+    text-align:center;
+    margin-bottom:8px;
+}
+
+.card img{
+    display:block;
+    margin:auto;
+    width:120px;
+    margin-bottom:10px;
+}
+
+.card p{
+    font-size:13px;
+    margin:4px 0;
+}
+
+
+
