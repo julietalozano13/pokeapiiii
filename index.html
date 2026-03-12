@@ -1,23 +1,127 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
-    <meta charset="UTF-8">
-    <title>Pokedex ♡</title>
-    <link rel="stylesheet" href="styles.css">
+<meta charset="UTF-8">
+<title>Pokedex ♡</title>
+
+<!-- hoja de estilos -->
+<link rel="stylesheet" href="styles.css">
+
 </head>
 
 <body>
 
+<!-- titulo -->
 <h1>Pokedex ♡</h1>
 
+
+<!-- filtros de la pokedex -->
 <div class="filters">
-    <input type="text" id="searchName" placeholder="Buscar por nombre">
-    <input type="number" id="searchId" placeholder="Buscar por ID">
-    <input type="text" id="searchType" placeholder="Buscar por tipo">
+
+<!-- filtrar por nombre -->
+<input type="text" id="searchName" placeholder="Buscar por nombre">
+
+<!-- filtrar por id -->
+<input type="number" id="searchId" placeholder="Buscar por ID">
+
+<!-- filtrar por tipo -->
+<input type="text" id="searchType" placeholder="Buscar por tipo">
+
 </div>
 
+
+
+<!-- zona donde se muestran los dos pokemon para pelear -->
+<div class="battle-area">
+
+
+<!-- pokemon 1 -->
+<div class="fighter" id="fighter1Card">
+
+<h3>Pokemon 1</h3>
+
+<div class="fighter-display">
+
+<!-- sprite -->
+<img id="fighter1Img"
+src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png">
+
+<!-- barra de vida -->
+<div class="hp-container">
+<div id="hpBar1" class="hp-bar"></div>
+</div>
+
+</div>
+
+<div class="fighter-controls">
+
+<!-- nombre del pokemon (no editable) -->
+<div id="fighter1Name" class="fighter-name">
+Seleccionar pokemon
+</div>
+
+<!-- eliminar seleccion -->
+<button onclick="clearFighter(1)">Eliminar</button>
+
+</div>
+
+</div>
+
+
+
+<!-- pokemon 2 -->
+<div class="fighter" id="fighter2Card">
+
+<h3>Pokemon 2</h3>
+
+<div class="fighter-display">
+
+<img id="fighter2Img"
+src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png">
+
+<div class="hp-container">
+<div id="hpBar2" class="hp-bar"></div>
+</div>
+
+</div>
+
+<div class="fighter-controls">
+
+<div id="fighter2Name" class="fighter-name">
+Seleccionar pokemon
+</div>
+
+<button onclick="clearFighter(2)">Eliminar</button>
+
+</div>
+
+</div>
+
+</div>
+
+
+
+<!-- boton para iniciar pelea -->
+<div class="battle-button">
+
+<button onclick="startBattle()">Iniciar batalla</button>
+
+</div>
+
+
+
+<!-- log de la batalla -->
+<div id="battleLog" class="battle-log"></div>
+
+
+
+<!-- contenedor donde se muestran los pokemon -->
 <div id="pokemonContainer" class="container"></div>
 
+
+
+<!-- script principal -->
 <script src="script.js"></script>
 
 </body>

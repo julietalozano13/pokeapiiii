@@ -1,101 +1,445 @@
-const container = document.getElementById("pokemonContainer");
+// contenedor donde se renderizan los pokemon
+const container = document.getElementById("pokemonContainer")
 
-let pokemons = [];
+// imagen placeholder
+const placeholder = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png"
 
-// Obtener pokemones desde la API
-async function getPokemons(){
+// lista completa de pokemon
+let allRefs = []
 
-    const response = await fetch("https://pokeapi.co/api/v2/pokemon?limit=151");
-    const data = await response.json();
+// lista filtrada
+let filteredRefs = []
 
-    const results = data.results;
+// cache de detalles
+const detailsCache = new Map()
 
-    for(let pokemon of results){
+// paginación
+let pageSize = 30
+let cursor = 0
+let isLoading = false
 
-        const res = await fetch(pokemon.url);
-        const pokeData = await res.json();
+// pokemon seleccionados
+let fighter1 = null
+let fighter2 = null
 
-        pokemons.push(pokeData);
-    }
+// inputs filtros
+const inputName = document.getElementById("searchName")
+const inputId = document.getElementById("searchId")
+const inputType = document.getElementById("searchType")
 
-    displayPokemons(pokemons);
-}
-
-getPokemons();
+// log batalla
+const log = document.getElementById("battleLog")
 
 
-// Mostrar pokemones en tarjetas
-function displayPokemons(pokemonList){
 
-    container.innerHTML = "";
+/* cargar lista completa de pokemon */
 
-    pokemonList.forEach(pokemon => {
+async function fetchAllPokemonRefs(){
 
-        const card = document.createElement("div");
-        card.classList.add("card");
+let url = "https://pokeapi.co/api/v2/pokemon?limit=200&offset=0"
 
-        const types = pokemon.types
-            .map(t => t.type.name)
-            .join(", ");
+while(url){
 
-        const abilities = pokemon.abilities
-            .map(a => a.ability.name)
-            .join(", ");
+const res = await fetch(url)
+const data = await res.json()
 
-        const hp = pokemon.stats.find(stat => stat.stat.name === "hp").base_stat;
-        const attack = pokemon.stats.find(stat => stat.stat.name === "attack").base_stat;
-        const defense = pokemon.stats.find(stat => stat.stat.name === "defense").base_stat;
-        const speed = pokemon.stats.find(stat => stat.stat.name === "speed").base_stat;
+allRefs = allRefs.concat(data.results)
 
-        card.innerHTML = `
-            <h3>${pokemon.name}</h3>
-            <img src="${pokemon.sprites.front_default}">
-            
-            <p><strong>ID:</strong> ${pokemon.id}</p>
-            <p><strong>Tipo:</strong> ${types}</p>
-            <p><strong>Altura:</strong> ${pokemon.height}</p>
-            <p><strong>Peso:</strong> ${pokemon.weight}</p>
-
-            <p><strong>Habilidades:</strong> ${abilities}</p>
-
-            <p><strong>HP:</strong> ${hp}</p>
-            <p><strong>Ataque:</strong> ${attack}</p>
-            <p><strong>Defensa:</strong> ${defense}</p>
-            <p><strong>Velocidad:</strong> ${speed}</p>
-        `;
-
-        container.appendChild(card);
-    });
+url = data.next
 
 }
 
+filteredRefs = allRefs
 
-// Eventos para los filtros
-document.getElementById("searchName").addEventListener("input", filterPokemon);
-document.getElementById("searchId").addEventListener("input", filterPokemon);
-document.getElementById("searchType").addEventListener("input", filterPokemon);
+await resetAndLoad()
+
+}
+
+fetchAllPokemonRefs()
 
 
-// Función de filtrado
-function filterPokemon(){
 
-    const name = document.getElementById("searchName").value.toLowerCase();
-    const id = document.getElementById("searchId").value;
-    const type = document.getElementById("searchType").value.toLowerCase();
+/* obtener detalles pokemon */
 
-    const filtered = pokemons.filter(pokemon => {
+async function getPokemonDetails(ref){
 
-        const matchName = pokemon.name.includes(name);
+if(detailsCache.has(ref.url)) return detailsCache.get(ref.url)
 
-        const matchId = id === "" || pokemon.id == id;
+const res = await fetch(ref.url)
+const data = await res.json()
 
-        const matchType = pokemon.types.some(t =>
-            t.type.name.includes(type)
-        );
+detailsCache.set(ref.url,data)
 
-        return matchName && matchId && matchType;
+return data
 
-    });
+}
 
-    displayPokemons(filtered);
+
+
+/* crear tarjeta pokemon */
+
+function createCard(pokemon){
+
+const card = document.createElement("div")
+card.classList.add("card")
+
+const types = pokemon.types.map(t => t.type.name).join(", ")
+const abilities = pokemon.abilities.map(a => a.ability.name).join(", ")
+
+const hp = pokemon.stats.find(s => s.stat.name === "hp")?.base_stat ?? "N/A"
+const attack = pokemon.stats.find(s => s.stat.name === "attack")?.base_stat ?? "N/A"
+const defense = pokemon.stats.find(s => s.stat.name === "defense")?.base_stat ?? "N/A"
+const speed = pokemon.stats.find(s => s.stat.name === "speed")?.base_stat ?? "N/A"
+
+card.innerHTML = `
+<h3>${pokemon.name}</h3>
+<img src="${pokemon.sprites.front_default}">
+<p><strong>ID:</strong> ${pokemon.id}</p>
+<p><strong>Tipo:</strong> ${types}</p>
+<p><strong>Altura:</strong> ${pokemon.height}</p>
+<p><strong>Peso:</strong> ${pokemon.weight}</p>
+<p><strong>Habilidades:</strong> ${abilities}</p>
+<p><strong>HP:</strong> ${hp}</p>
+<p><strong>Ataque:</strong> ${attack}</p>
+<p><strong>Defensa:</strong> ${defense}</p>
+<p><strong>Velocidad:</strong> ${speed}</p>
+`
+
+card.addEventListener("click", () => selectPokemonForBattle(pokemon))
+
+return card
+
+}
+
+
+
+/* cargar página siguiente */
+
+async function loadNextPage(){
+
+if(isLoading) return
+if(cursor >= filteredRefs.length) return
+
+isLoading = true
+
+const slice = filteredRefs.slice(cursor,cursor+pageSize)
+cursor += slice.length
+
+for(let ref of slice){
+
+const pokemon = await getPokemonDetails(ref)
+container.appendChild(createCard(pokemon))
+
+}
+
+isLoading = false
+
+}
+
+
+
+/* scroll infinito */
+
+function nearBottom(){
+
+const threshold = 600
+return window.innerHeight + window.scrollY >= document.body.offsetHeight - threshold
+
+}
+
+window.addEventListener("scroll",()=>{
+if(nearBottom()) loadNextPage()
+})
+
+
+
+/* filtros */
+
+function handleEnter(event){
+
+if(event.key==="Enter") applyFilters()
+
+}
+
+inputName.addEventListener("keypress",handleEnter)
+inputId.addEventListener("keypress",handleEnter)
+inputType.addEventListener("keypress",handleEnter)
+
+
+
+async function applyFilters(){
+
+const name = inputName.value.trim().toLowerCase()
+const id = inputId.value.trim()
+const type = inputType.value.trim().toLowerCase()
+
+let refs = allRefs.filter(ref=>{
+
+const matchName = ref.name.includes(name)
+const matchId = id==="" || ref.url.split("/").filter(Boolean).pop()==id
+
+return matchName && matchId
+
+})
+
+if(type===""){
+
+filteredRefs = refs
+await resetAndLoad()
+return
+
+}
+
+try{
+
+const res = await fetch(`https://pokeapi.co/api/v2/type/${type}`)
+const data = await res.json()
+
+const typeSet = new Set(data.pokemon.map(p=>p.pokemon.name))
+filteredRefs = refs.filter(ref=>typeSet.has(ref.name))
+
+}
+catch{
+
+filteredRefs = []
+
+}
+
+await resetAndLoad()
+
+}
+
+
+
+/* reset lista */
+
+async function resetAndLoad(){
+
+cursor = 0
+container.innerHTML = ""
+
+await loadNextPage()
+
+}
+
+
+
+/* seleccionar pokemon batalla */
+
+function selectPokemonForBattle(pokemon){
+
+if(!fighter1){
+
+fighter1 = pokemon
+document.getElementById("fighter1Img").src = pokemon.sprites.front_default
+document.getElementById("fighter1Name").innerText = pokemon.name
+return
+
+}
+
+if(!fighter2){
+
+fighter2 = pokemon
+document.getElementById("fighter2Img").src = pokemon.sprites.front_default
+document.getElementById("fighter2Name").innerText = pokemon.name
+
+}
+
+}
+
+
+
+/* eliminar pokemon */
+
+function clearFighter(slot){
+
+if(slot===1){
+
+fighter1 = null
+document.getElementById("fighter1Img").src = placeholder
+document.getElementById("fighter1Name").innerText = "Seleccionar pokemon"
+
+}else{
+
+fighter2 = null
+document.getElementById("fighter2Img").src = placeholder
+document.getElementById("fighter2Name").innerText = "Seleccionar pokemon"
+
+}
+
+}
+
+
+
+/* actualizar barras vida */
+
+function updateHPBars(hp1,hp2){
+
+document.getElementById("hpBar1").style.width = hp1 + "%"
+document.getElementById("hpBar2").style.width = hp2 + "%"
+
+}
+
+
+
+/* cargar TODOS los moves y clasificarlos */
+
+async function loadAllMoves(pokemon){
+
+const normalMoves = []
+const specialMoves = []
+const defenseMoves = []
+
+const promises = pokemon.moves.map(m => fetch(m.move.url).then(r=>r.json()))
+const allMoves = await Promise.all(promises)
+
+for(const moveData of allMoves){
+
+const name = moveData.name
+const type = moveData.damage_class.name
+
+if(type==="physical") normalMoves.push(name)
+if(type==="special") specialMoves.push(name)
+if(type==="status") defenseMoves.push(name)
+
+}
+
+return {normal:normalMoves,special:specialMoves,defense:defenseMoves}
+
+}
+
+/* batalla */
+
+async function startBattle(){
+
+if(!fighter1 || !fighter2){
+alert("Selecciona dos Pokémon")
+return
+}
+
+log.style.display="block"
+log.innerHTML=""
+
+updateHPBars(100,100)
+
+/* cargar movimientos */
+const p1Moves = await loadAllMoves(fighter1)
+const p2Moves = await loadAllMoves(fighter2)
+
+let p1 = {hp:100,moves:p1Moves,name:fighter1.name}
+let p2 = {hp:100,moves:p2Moves,name:fighter2.name}
+
+let turn = 1
+
+while(turn<=6 && p1.hp>0 && p2.hp>0){
+
+let attacker = turn%2===1 ? p1 : p2
+let defender = turn%2===1 ? p2 : p1
+
+let moveName = "struggle"
+let action = "ataque normal"
+let damage = Math.floor(Math.random()*20)+5
+
+/* ataque especial */
+
+if(turn>=3 && attacker.moves.special.length>0 && Math.random()<0.3){
+
+action="ataque especial"
+moveName = attacker.moves.special[Math.floor(Math.random()*attacker.moves.special.length)]
+damage = Math.floor(Math.random()*30)+15
+
+}
+
+/* defensa especial */
+
+else if(turn>=2 && attacker.moves.defense.length>0 && Math.random()<0.2){
+
+action="defensa especial"
+moveName = attacker.moves.defense[Math.floor(Math.random()*attacker.moves.defense.length)]
+damage = Math.floor(damage/2)
+
+}
+
+/* ataque normal */
+
+else if(attacker.moves.normal.length>0){
+
+moveName = attacker.moves.normal[Math.floor(Math.random()*attacker.moves.normal.length)]
+
+}
+
+/* fallo random */
+
+if(Math.random()<0.2){
+
+log.innerHTML += `<p>Turno ${turn}: ${attacker.name} intentó usar <strong>${moveName}</strong> pero falló.</p>`
+
+}else{
+
+defender.hp -= damage
+if(defender.hp<0) defender.hp=0
+
+updateHPBars(p1.hp,p2.hp)
+
+log.innerHTML += `<p>Turno ${turn}: <strong>${attacker.name}</strong> usó <strong>${moveName}</strong> (${action}) e hizo <strong>${damage}</strong> de daño.</p>`
+
+}
+
+turn++
+
+await new Promise(r=>setTimeout(r,1000))
+
+}
+
+let winner = p1.hp>p2.hp ? fighter1 : fighter2
+
+showWinnerAnimation(winner)
+
+}
+
+
+
+/* pantalla ganador */
+
+function showWinnerAnimation(winner){
+
+const overlay=document.createElement("div")
+overlay.classList.add("winner-overlay")
+
+overlay.innerHTML=`
+<div class="winner-display">
+<h2>🏆 GANADOR</h2>
+<img src="${winner.sprites.front_default}">
+</div>
+`
+
+document.body.appendChild(overlay)
+
+setTimeout(()=>{
+overlay.remove()
+resetBattle()
+},5000)
+
+}
+
+
+
+/* reset batalla */
+
+function resetBattle(){
+
+fighter1=null
+fighter2=null
+
+document.getElementById("fighter1Img").src=placeholder
+document.getElementById("fighter2Img").src=placeholder
+
+document.getElementById("fighter1Name").innerText="Seleccionar pokemon"
+document.getElementById("fighter2Name").innerText="Seleccionar pokemon"
+
+updateHPBars(100,100)
+
+log.style.display="none"
+log.innerHTML=""
+
 }

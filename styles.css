@@ -1,79 +1,291 @@
+/* estilos generales */
+
 body{
-    font-family: 'Segoe UI', sans-serif;
-    margin:0;
-    padding:20px;
-    text-align:center;
-    background: #FFC0CB; 
+font-family:'Segoe UI',sans-serif;
+margin:0;
+padding:20px;
+text-align:center;
+background:linear-gradient(180deg,#ffdde1,#ee9ca7);
+min-height:100vh;
 }
 
+
+/* titulo principal */
 
 h1{
-    color:white;
-    font-size:3rem;
-    margin-bottom:20px;
+color:white;
+font-size:3rem;
+margin-bottom:20px;
+letter-spacing:2px;
 }
 
 
+/* filtros de busqueda */
+
 .filters{
-    display:flex;
-    justify-content:center;
-    gap:15px;
-    margin-bottom:30px;
-    flex-wrap:wrap;
+display:flex;
+justify-content:center;
+gap:15px;
+margin-bottom:25px;
+flex-wrap:wrap;
 }
 
 .filters input{
-    padding:10px 15px;
-    border-radius:8px;
-    border:none;
-    font-size:14px;
-    outline:none;
-    box-shadow:0 3px 8px rgba(0,0,0,0.15);
+padding:12px 16px;
+border-radius:10px;
+border:none;
+font-size:14px;
+box-shadow:0 4px 10px rgba(0,0,0,0.15);
 }
+
+
+/* area donde se muestran los pokemon seleccionados */
+
+.battle-area{
+display:flex;
+justify-content:center;
+gap:60px;
+margin:30px 0;
+}
+
+
+/* tarjeta de pokemon seleccionado */
+
+.fighter{
+background:white;
+padding:20px;
+border-radius:16px;
+box-shadow:0 10px 25px rgba(0,0,0,0.2);
+width:220px;
+}
+
+
+/* contenedor sprite + barra vida */
+
+.fighter-display{
+display:flex;
+align-items:center;
+gap:15px;
+justify-content:center;
+}
+
+
+/* sprite pokemon */
+
+.fighter img{
+width:100px;
+height:100px;
+object-fit:contain;
+}
+
+
+/* barra de vida */
+
+.hp-container{
+width:100px;
+height:12px;
+background:#ddd;
+border-radius:10px;
+overflow:hidden;
+}
+
+.hp-bar{
+height:100%;
+width:100%;
+background:linear-gradient(90deg,#4CAF50,#8BC34A);
+transition:width 0.5s;
+}
+
+
+/* controles de cada pokemon */
+
+.fighter-controls{
+margin-top:10px;
+display:flex;
+flex-direction:column;
+gap:8px;
+}
+
+
+/* nombre del pokemon seleccionado */
+
+.fighter-name{
+background:#f2f2f2;
+padding:12px;
+border-radius:12px;
+margin-top:10px;
+font-size:16px;
+box-shadow:0 3px 10px rgba(0,0,0,0.1);
+text-transform:capitalize;
+}
+
+
+/* boton eliminar */
+
+.fighter-controls button{
+padding:8px;
+border:none;
+border-radius:8px;
+background:#ff6b81;
+color:white;
+cursor:pointer;
+}
+
+
+/* boton iniciar batalla */
+
+.battle-button{
+margin:20px;
+}
+
+.battle-button button{
+padding:12px 25px;
+font-size:16px;
+background:#ff4757;
+color:white;
+border:none;
+border-radius:12px;
+cursor:pointer;
+box-shadow:0 6px 15px rgba(0,0,0,0.2);
+}
+
+
+/* log de la batalla */
+
+.battle-log{
+margin:25px auto;
+background:white;
+padding:20px;
+border-radius:16px;
+width:60%;
+max-width:600px;
+text-align:left;
+box-shadow:0 10px 25px rgba(0,0,0,0.2);
+display:none;
+}
+
+
+/* contenedor de pokedex */
 
 .container{
-    display:flex;
-    flex-wrap:wrap;
-    justify-content:center;
-    gap:20px;
+display:flex;
+flex-wrap:wrap;
+justify-content:center;
+gap:20px;
+margin-top:30px;
 }
 
-/* tarjeta */
+
+/* tarjeta de pokemon en pokedex */
 
 .card{
-    background:white;
-    width:240px;
-    padding:18px;
-    border-radius:16px;
-    box-shadow:0 8px 20px rgba(0,0,0,0.15);
-    transition:0.25s;
-    text-align:left;
+background:white;
+width:240px;
+padding:18px;
+border-radius:16px;
+box-shadow:0 8px 20px rgba(0,0,0,0.2);
+transition:0.25s;
+text-align:left;
+cursor:pointer;
 }
+
+
+/* animacion hover */
 
 .card:hover{
-    transform:translateY(-6px);
-    box-shadow:0 12px 25px rgba(0,0,0,0.25);
+transform:translateY(-6px) scale(1.03);
+box-shadow:0 12px 30px rgba(0,0,0,0.3);
 }
 
-/* nombre */
+
+/* nombre del pokemon */
 
 .card h3{
-    text-transform:capitalize;
-    text-align:center;
-    margin-bottom:8px;
+text-transform:capitalize;
+text-align:center;
+margin-bottom:8px;
 }
+
+
+/* sprite en tarjeta */
 
 .card img{
-    display:block;
-    margin:auto;
-    width:120px;
-    margin-bottom:10px;
+display:block;
+margin:auto;
+width:120px;
+margin-bottom:10px;
 }
+
+
+/* texto tarjeta */
 
 .card p{
-    font-size:13px;
-    margin:4px 0;
+font-size:13px;
+margin:4px 0;
 }
 
 
+/* overlay pantalla ganador */
 
+.winner-overlay{
+position:fixed;
+top:0;
+left:0;
+width:100vw;
+height:100vh;
+background:linear-gradient(180deg,#ffdde1,#ee9ca7);
+display:flex;
+justify-content:center;
+align-items:center;
+z-index:9999;
+}
+
+
+/* tarjeta central del ganador */
+
+.winner-display{
+background:white;
+padding:50px;
+border-radius:30px;
+box-shadow:0 30px 80px rgba(0,0,0,0.3);
+text-align:center;
+animation:winnerZoom 0.5s ease;
+}
+
+
+/* sprite ganador */
+
+.winner-display img{
+width:220px;
+margin:20px 0;
+}
+
+
+/* texto ganador */
+
+.winner-display h2{
+color:#ff4757;
+font-size:2rem;
+}
+
+
+/* nombre pokemon ganador */
+
+.winner-display h1{
+font-size:2.5rem;
+margin-bottom:10px;
+}
+
+
+/* animacion entrada ganador */
+
+@keyframes winnerZoom{
+0%{
+transform:scale(0.6);
+opacity:0;
+}
+100%{
+transform:scale(1);
+opacity:1;
+}
+}
