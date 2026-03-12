@@ -210,7 +210,6 @@ await resetAndLoad()
 }
 
 
-
 /* reset lista */
 
 async function resetAndLoad(){
@@ -322,7 +321,6 @@ log.innerHTML=""
 
 updateHPBars(100,100)
 
-/* cargar movimientos */
 const p1Moves = await loadAllMoves(fighter1)
 const p2Moves = await loadAllMoves(fighter2)
 
@@ -330,61 +328,75 @@ let p1 = {hp:100,moves:p1Moves,name:fighter1.name}
 let p2 = {hp:100,moves:p2Moves,name:fighter2.name}
 
 let turn = 1
+let isP1Turn = true
 
 while(turn<=6 && p1.hp>0 && p2.hp>0){
 
-let attacker = turn%2===1 ? p1 : p2
-let defender = turn%2===1 ? p2 : p1
+let attacker = isP1Turn ? p1 : p2
+let defender = isP1Turn ? p2 : p1
 
-let moveName = "struggle"
-let action = "ataque normal"
-let damage = Math.floor(Math.random()*20)+5
+let action
+let moveName
+let damage = 0
+let heal = 0
 
-/* ataque especial */
+let r = Math.random()
 
-if(turn>=3 && attacker.moves.special.length>0 && Math.random()<0.3){
+if(turn>2 && attacker.moves.defense.length>0 && r < 0.2){
 
-action="ataque especial"
+action = "defensa"
+moveName = attacker.moves.defense[Math.floor(Math.random()*attacker.moves.defense.length)]
+heal = Math.floor(Math.random()*15)+5
+
+}
+else if(turn>3 && attacker.moves.special.length>0 && r < 0.4){
+
+action = "especial"
 moveName = attacker.moves.special[Math.floor(Math.random()*attacker.moves.special.length)]
 damage = Math.floor(Math.random()*30)+15
 
 }
+else if(r < 0.2){
 
-/* defensa especial */
-
-else if(turn>=2 && attacker.moves.defense.length>0 && Math.random()<0.2){
-
-action="defensa especial"
-moveName = attacker.moves.defense[Math.floor(Math.random()*attacker.moves.defense.length)]
-damage = Math.floor(damage/2)
+action = "fallo"
+moveName = "ataque"
 
 }
+else{
 
-/* ataque normal */
-
-else if(attacker.moves.normal.length>0){
-
+action = "normal"
 moveName = attacker.moves.normal[Math.floor(Math.random()*attacker.moves.normal.length)]
+damage = Math.floor(Math.random()*20)+5
 
 }
 
-/* fallo random */
+if(action === "defensa"){
 
-if(Math.random()<0.2){
+attacker.hp += heal
+if(attacker.hp>100) attacker.hp=100
 
-log.innerHTML += `<p>Turno ${turn}: ${attacker.name} intentó usar <strong>${moveName}</strong> pero falló.</p>`
+updateHPBars(p1.hp,p2.hp)
 
-}else{
+log.innerHTML += `<p>Turno ${turn}: <strong>${attacker.name}</strong> usó <strong>${moveName}</strong> (defensa especial) y recuperó <strong>${heal}</strong> de vida.</p>`
+
+}
+else if(action === "fallo"){
+
+log.innerHTML += `<p>Turno ${turn}: <strong>${attacker.name}</strong> intentó atacar pero falló.</p>`
+
+}
+else{
 
 defender.hp -= damage
 if(defender.hp<0) defender.hp=0
 
 updateHPBars(p1.hp,p2.hp)
 
-log.innerHTML += `<p>Turno ${turn}: <strong>${attacker.name}</strong> usó <strong>${moveName}</strong> (${action}) e hizo <strong>${damage}</strong> de daño.</p>`
+log.innerHTML += `<p>Turno ${turn}: <strong>${attacker.name}</strong> usó <strong>${moveName}</strong> (${action==="especial"?"ataque especial":"ataque normal"}) e hizo <strong>${damage}</strong> de daño.</p>`
 
 }
 
+isP1Turn = !isP1Turn
 turn++
 
 await new Promise(r=>setTimeout(r,1000))
@@ -396,8 +408,6 @@ let winner = p1.hp>p2.hp ? fighter1 : fighter2
 showWinnerAnimation(winner)
 
 }
-
-
 
 /* pantalla ganador */
 
@@ -418,7 +428,7 @@ document.body.appendChild(overlay)
 setTimeout(()=>{
 overlay.remove()
 resetBattle()
-},5000)
+},2000)
 
 }
 
